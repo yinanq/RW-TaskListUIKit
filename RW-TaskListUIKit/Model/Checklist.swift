@@ -27,4 +27,17 @@ class Checklist {
         items.append(row4Item)
         items.append(row5Item)
     }
+    
+    func addItem() -> ChecklistItem {
+        let item = ChecklistItem()
+        item.text = randomTitle()
+        items.append(item)
+        return item
+    }
+    
+    private func randomTitle() -> String {
+        let titles = ["radom 1", "radom 2", "radom 3", "radom 4", "radom 5"]
+        let randomNum = Int.random(in: 0..<titles.count)
+        return titles[randomNum]
+    }
 }

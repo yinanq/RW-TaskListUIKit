@@ -19,7 +19,7 @@ class ViewController: UITableViewController {
     
     override func viewDidLoad() {
         super.viewDidLoad()
-        // Do any additional setup after loading the view.
+        navigationController?.navigationBar.prefersLargeTitles = true
     }
     
     override func tableView(_ tableView: UITableView, numberOfRowsInSection section: Int) -> Int {
@@ -33,15 +33,26 @@ class ViewController: UITableViewController {
         }
         let item = checklist.items[indexPath.row]
         updateText(of: cell, with: item)
-        updateCheckmark(of: cell, with: item)
+        updateCheckmarkToMatchChecked(of: cell, with: item)
         return cell
     }
     
     override func tableView(_ tableView: UITableView, didSelectRowAt indexPath: IndexPath) {
         if let cell = tableView.cellForRow(at: indexPath) {
-            updateCheckmark(of: cell, with: checklist.items[indexPath.row])
+            toggleChecked(of: cell, with: checklist.items[indexPath.row])
             tableView.deselectRow(at: indexPath, animated: true)
         } 
+    }
+    
+    override func tableView(_ tableView: UITableView, commit editingStyle: UITableViewCell.EditingStyle, forRowAt indexPath: IndexPath) {
+        checklist.items.remove(at: indexPath.row)
+        tableView.deleteRows(at: [indexPath], with: .automatic)
+    }
+    
+    @IBAction func addItem(_ sender: Any) {
+        let newBottomRowIndexPath = IndexPath(row: checklist.items.count, section: 0)
+        _ = checklist.addItem()
+        tableView.insertRows(at: [newBottomRowIndexPath], with: .automatic)
     }
     
     func updateText(of cell: UITableViewCell, with item: ChecklistItem ) {
@@ -50,13 +61,17 @@ class ViewController: UITableViewController {
          }
     }
     
-    func updateCheckmark(of cell: UITableViewCell, with item: ChecklistItem) {
-        if item.checked {
-            cell.accessoryType = .none
-        } else {
-            cell.accessoryType = .checkmark
-        }
+    func toggleChecked(of cell: UITableViewCell, with item: ChecklistItem) {
         item.toggleChecked()
+        updateCheckmarkToMatchChecked(of: cell, with: item)
+    }
+    
+    func updateCheckmarkToMatchChecked(of cell: UITableViewCell, with item: ChecklistItem) {
+        if item.checked {
+            cell.accessoryType = .checkmark
+        } else {
+            cell.accessoryType = .none
+        }
     }
     
 }
