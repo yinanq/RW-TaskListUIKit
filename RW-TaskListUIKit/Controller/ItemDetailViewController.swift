@@ -8,7 +8,17 @@
 
 import UIKit
 
-class AddItemTableViewController: UITableViewController {
+protocol ItemDetailViewControllerDelegate: class {
+    func itemDetailViewDidCancel(controller: ItemDetailViewController)
+    func itemDetailViewDidFinishAdding(controller: ItemDetailViewController, item: ChecklistItem)
+    func itemDetailViewDidFinishEditing(controller: ItemDetailViewController, item: ChecklistItem)
+}
+
+class ItemDetailViewController: UITableViewController {
+    
+    weak var delegate: ItemDetailViewControllerDelegate?
+    weak var checklist: Checklist?
+    weak var item: ChecklistItem?
     
     @IBOutlet weak var cancelBarBtn: UIBarButtonItem!
     @IBOutlet weak var saveBarBtn: UIBarButtonItem!
@@ -16,8 +26,17 @@ class AddItemTableViewController: UITableViewController {
     
     override func viewDidLoad() {
         super.viewDidLoad()
-        navigationItem.largeTitleDisplayMode = .never
         textfield.delegate = self
+        navigationItem.largeTitleDisplayMode = .never
+        // is editing if received item:
+        if let item = item {
+            title = "Edit"
+            textfield.text = item.text
+            saveBarBtn.isEnabled = true
+        } else {
+            // else is adding
+            title = "Add"
+        }
     }
     
     override func viewWillAppear(_ animated: Bool) {
@@ -29,16 +48,28 @@ class AddItemTableViewController: UITableViewController {
     }
     
     @IBAction func cancel(_ sender: Any) {
-        navigationController?.popViewController(animated: true)
+        delegate?.itemDetailViewDidCancel(controller: self)
     }
     
     @IBAction func save(_ sender: Any) {
-        navigationController?.popViewController(animated: true)
+        // edit:
+        if let item = item, let text = textfield.text {
+            item.text = text
+            delegate?.itemDetailViewDidFinishEditing(controller: self, item: item)
+            // add:
+        } else {
+            if let item = checklist?.addItem() {
+                if let text = textfield.text {
+                    item.text = text
+                }
+                delegate?.itemDetailViewDidFinishAdding(controller: self, item: item)
+            }
+        }
     }
     
 }
 
-extension AddItemTableViewController: UITextFieldDelegate {
+extension ItemDetailViewController: UITextFieldDelegate {
     func textFieldShouldReturn(_ textField: UITextField) -> Bool {
         textfield.resignFirstResponder()
         return false

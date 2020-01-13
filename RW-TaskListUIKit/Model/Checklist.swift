@@ -30,7 +30,6 @@ class Checklist {
     
     func addItem() -> ChecklistItem {
         let item = ChecklistItem()
-        item.text = randomTitle()
         items.append(item)
         return item
     }

@@ -49,16 +49,10 @@ class ViewController: UITableViewController {
         tableView.deleteRows(at: [indexPath], with: .automatic)
     }
     
-    @IBAction func addItem(_ sender: Any) {
-        let newBottomRowIndexPath = IndexPath(row: checklist.items.count, section: 0)
-        _ = checklist.addItem()
-        tableView.insertRows(at: [newBottomRowIndexPath], with: .automatic)
-    }
-    
     func updateText(of cell: UITableViewCell, with item: ChecklistItem ) {
-         if let label = cell.viewWithTag(1) as? UILabel {
+        if let label = cell.viewWithTag(1) as? UILabel {
             label.text = item.text
-         }
+        }
     }
     
     func toggleChecked(of cell: UITableViewCell, with item: ChecklistItem) {
@@ -67,11 +61,59 @@ class ViewController: UITableViewController {
     }
     
     func updateCheckmarkToMatchChecked(of cell: UITableViewCell, with item: ChecklistItem) {
+        guard let checkedLabel = cell.viewWithTag(2) else {
+            return
+        }
         if item.checked {
-            cell.accessoryType = .checkmark
+            checkedLabel.isHidden = false
         } else {
-            cell.accessoryType = .none
+            checkedLabel.isHidden = true
+        }
+        //        if let checkedLabel = cell.viewWithTag(2) {
+        //            if item.checked {
+        //                checkedLabel.isHidden = false
+        //            } else {
+        //                checkedLabel.isHidden = true
+        //            }
+        //        }
+    }
+    
+    override func prepare(for segue: UIStoryboardSegue, sender: Any?) {
+        if segue.identifier == "AddItemSegue" {
+            if let destination = segue.destination as? ItemDetailViewController {
+                destination.delegate = self
+                destination.checklist = checklist
+            }
+        }
+        if segue.identifier == "EditItemSegue" {
+            if let destination = segue.destination as? ItemDetailViewController {
+                if let cell = sender as? UITableViewCell, let indexPath = tableView.indexPath(for: cell) {
+                    let item = checklist.items[indexPath.row]
+                    destination.item = item
+                    destination.delegate = self
+                }
+            }
         }
     }
     
+}
+
+extension ViewController: ItemDetailViewControllerDelegate {
+    func itemDetailViewDidCancel(controller: ItemDetailViewController) {
+        navigationController?.popViewController(animated: true)
+    }
+    func itemDetailViewDidFinishAdding(controller: ItemDetailViewController, item: ChecklistItem) {
+        let newBottomRowIndexPath = IndexPath(row: checklist.items.count - 1, section: 0)
+        navigationController?.popViewController(animated: true)
+        tableView.insertRows(at: [newBottomRowIndexPath], with: .automatic)
+    }
+    func itemDetailViewDidFinishEditing(controller: ItemDetailViewController, item: ChecklistItem) {
+        if let index = checklist.items.firstIndex(of: item) {
+            let indexPath = IndexPath(row: index, section: 0)
+            if let cell = tableView.cellForRow(at: indexPath) {
+                updateText(of: cell, with: item)
+            }
+        }
+        navigationController?.popViewController(animated: true)
+    }
 }
